@@ -1,0 +1,28 @@
+Ứng dụng upload file từ html lên s3
+
+
+Phần thiết kế chi tiết cho Index.html:
+1. Tạo 1 form html
+2. Upload file từ form html
+3. Check file type:
+    3.1. Nếu file type là CSV
+        Thực hiện bước tiếp theo
+    3.2. Nếu file type không phải là CSV
+        Thông báo lỗi ra màn hình
+4. Thực hiện lấy presigned url từ API
+    4.1 Nếu lấy được presigned url
+        Thực hiện bước tiếp theo
+    4.2 Nếu không lấy được presigned url
+        Thông báo lỗi ra màn hình
+5. Upload file lên s3
+    5.1 Nếu upload file thành công
+        Thông báo thành công
+    5.2 Nếu upload file không thành công
+        Thông báo lỗi ra màn hình
+
+Phần thiết kế chi tiết cho Lambda Rest API:
+1. Tạo fileName bằng hàm generateUUID
+2. Lưu fileName vào dynamodb
+3. Tạo objectKey từ fileName
+4. Tạo presigned url từ objectKey
+5. Trả về presigned url cho client

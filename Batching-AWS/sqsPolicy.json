@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Id": "SQSQueuePolicy",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sqs:SendMessage",
+      "Resource": "arn:aws:sqs:ap-northeast-1:650251698778:linhclass-upload-image-call-lambda-function-queue",
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "arn:aws:lambda:ap-northeast-1:650251698778:function:linhclass-call-lambda-route-lambda"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::650251698778:root"
+      },
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      "Resource": "arn:aws:sqs:ap-northeast-1:650251698778:linhclass-upload-image-call-lambda-function-queue"
+    }
+  ]
+}
