@@ -37,7 +37,7 @@ const checkTableIfExistElseCreate = async (dynamodb, tableName) => {
 }
 
 export async function handler(event) {
-    const bucketName = 'linhclass-test';
+    const bucketName = 'linhclass-upload-test-bucket';
     const fileName = generateUUID(); // Tên file
 
     // TODO: save to dynamodb
