@@ -10,14 +10,19 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
+    "@chakra-ui/react": "^3.13.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.7",
-    "@mui/material": "^6.4.7",
+    "@mui/material": "^6.4.8",
+    "@mui/styled-engine-sc": "^6.4.6",
     "antd": "^5.24.3",
     "next": "15.2.2",
+    "next-themes": "^0.4.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "styled-components": "^6.1.16"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
