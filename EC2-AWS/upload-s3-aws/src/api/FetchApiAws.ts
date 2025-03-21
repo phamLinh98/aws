@@ -1,0 +1,29 @@
+export const fetchApiAws = async (file:any) => {
+    try {
+        const response = await fetch('https://qt0tqm083d.execute-api.ap-northeast-1.amazonaws.com/test');
+        if (!response.ok) {
+            throw new Error("Failed to get presigned URL");
+        }
+        console.log('first');
+        const data_1 = await response.json();
+        console.log(data_1);
+        if (!data_1.presignedUrl) {
+            throw new Error("Presigned URL not found");
+        }
+
+        console.log('second');
+        const uploadResponse = await fetch(data_1.presignedUrl, {
+            method: 'PUT',
+            mode: 'cors',
+            body: file, // Sử dụng file thật
+            headers: {
+                'Content-Type': file.type
+            }
+        });
+        console.log(uploadResponse);
+        return uploadResponse;
+    } catch (error) {
+        console.error(error);
+        throw error; // Re-throw the error to be caught in the component
+    }
+}
