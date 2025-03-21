@@ -1,0 +1,28 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowLambdaToPutCSV",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::650251698778:role/raccoon-s3-dynamoDB-cloudwatch-role"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::raccoon-upload-csv-s3-bucket/*.csv",
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        },
+        {
+            "Sid": "AllowLambdaToGetBucketLocation",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::650251698778:role/raccoon-s3-dynamoDB-cloudwatch-role"
+            },
+            "Action": "s3:GetBucketLocation",
+            "Resource": "arn:aws:s3:::raccoon-upload-csv-s3-bucket"
+        }
+    ]
+}
