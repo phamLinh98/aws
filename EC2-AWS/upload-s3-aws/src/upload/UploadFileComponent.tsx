@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Input, notification } from 'antd';
+import { Button, Card, Input, notification } from 'antd';
 import { SmileOutlined } from '@ant-design/icons';
 import { fetchApiAws } from '../api/FetchApiAws';
 
@@ -54,13 +54,24 @@ export const UploadFileComponent = () => {
         }
     };
 
+    const status = 'Uploading';
+    const times = 0;
+
+    //TODO: tôi cần truy cập vào dynamoDB có tên upload-csv lấy ra giá trị trường status hiên tại 
+
     return (
-        <div style={{ display: 'flex', gap: '5px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {contextHolder}
             <Input type="file" onChange={uploadCsvFromPC} />
             <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
-                {uploading ? 'Uploading...' : 'Upload'}
+            {uploading ? 'Uploading...' : 'Upload'}
             </Button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+            <Card title="Upload-status" variant="borderless" style={{ width: 300 }}>
+                <p>Status: {status}</p>
+                <p>CallAPI: {times}</p>
+            </Card>
+            </div>
         </div>
     );
 };
