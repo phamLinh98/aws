@@ -56,24 +56,8 @@ export const UploadFileComponent = () => {
     };
 
     const status = 'Uploading';
-    const times = 0;
+    const batchID = '2c11828a-832c-45bd-bcbc-1dacb5142ad9.csv';
     
-    // const [statusData, setStatusData] = useState<any>(undefined);
-
-    // useEffect(() => {
-    //     const getStatus = async () => {
-    //         try {
-    //             const statusResponse = await fetchApiGetStatus();
-    //             setStatusData(statusResponse);
-    //         } catch (error) {
-    //             console.error(error);
-    //         }
-    //     };
-    //     getStatus();
-    // }, []);
-
-    // console.log('statusData', statusData);
-
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {contextHolder}
@@ -83,8 +67,8 @@ export const UploadFileComponent = () => {
             </Button>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                 <Card title="Upload-status" variant="borderless" style={{ width: 300 }}>
+                    <p>{batchID}</p>
                     <p>Status: {status}</p>
-                    <p>CallAPI: {times}</p>
                 </Card>
             </div>
         </div>
