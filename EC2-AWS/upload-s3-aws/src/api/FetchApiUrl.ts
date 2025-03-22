@@ -1,17 +1,24 @@
-export const fetchApiAws = async (file: any, pushNotification: any, status:any) => {
+export const fetchApiAws = async (file: any, pushNotification: any, status:any="Upload file đầu tiên") => {
     try {
+        if(!status){
+            pushNotification('Upload file đầu tiên');
+        }
+        pushNotification(status);
         const response = await fetch('https://wf3dzxspb0.execute-api.ap-northeast-1.amazonaws.com/get-url');
         if (!response.ok) {
             throw new Error("Failed to get presigned URL");
         }
         const data_1 = await response.json();
-        console.log(data_1);
         if (!data_1.presignedUrl) {
             throw new Error("Presigned URL not found");
         }
 
         // Upload file to S3
+        if(!status){
+            pushNotification('Upload file đầu tiên');
+        }
         pushNotification(status);
+
         const uploadResponse = await fetch(data_1.presignedUrl, {
             method: 'PUT',
             mode: 'cors',
@@ -21,6 +28,9 @@ export const fetchApiAws = async (file: any, pushNotification: any, status:any) 
             }
         });
 
+        if(!status){
+            pushNotification('Upload thành công file đầu tiên');
+        }
         pushNotification(status);
         
         return uploadResponse;

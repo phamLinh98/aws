@@ -64,8 +64,8 @@ export const UploadFileComponent = () => {
             </Button>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                 <Card title="Upload-status" variant="borderless" style={{ width: 300 }}>
-                    <p>UUID: {listUpload?.uuid}</p>
-                    <p>Status: {listUpload?.status}</p>
+                    <p>UUID: {listUpload?.uuid || '0'}</p>
+                    <p>Status: {listUpload?.status || '0'}</p>
                 </Card>
             </div>
         </div>
