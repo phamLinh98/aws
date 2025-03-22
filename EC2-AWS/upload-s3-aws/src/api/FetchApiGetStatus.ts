@@ -5,7 +5,6 @@ export const fetchApiGetStatus = async () => {
             throw new Error("Failed to get upload status csv");
         }
         const uploadResponse = await response.json();
-
         return uploadResponse;
     } catch (error) {
         console.error(error);

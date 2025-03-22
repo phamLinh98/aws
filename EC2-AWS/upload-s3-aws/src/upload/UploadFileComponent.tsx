@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Button, Card, Input, notification } from 'antd';
 import { SmileOutlined } from '@ant-design/icons';
 import { fetchApiAws } from '../api/FetchApiUrl';
-import { fetchApiGetStatus } from '../api/FetchApiGetStatus';
+import { useFacadeUpload } from '../redux/useFacadeUpload';
+import CountDown from './CountDown';
 
 export const UploadFileComponent = () => {
     const [api, contextHolder] = notification.useNotification();
@@ -20,6 +21,8 @@ export const UploadFileComponent = () => {
         const file = event.target.files[0];
         setSelectedFile(file);
     };
+
+    const { listUpload } = useFacadeUpload();
 
     // Toast
     const openNotification = (message: string) => {
@@ -42,10 +45,7 @@ export const UploadFileComponent = () => {
         try {
             setUploading(true);
 
-            await fetchApiAws(selectedFile, openNotification); // Gọi fetchApiAws sau khi hiển thị tất cả message
-
-            openNotification('File uploaded successfully.');
-
+            await fetchApiAws(selectedFile, openNotification, listUpload.status); // Gọi fetchApiAws sau khi hiển thị tất cả message
             setSelectedFile(null);
 
         } catch (error) {
@@ -55,9 +55,6 @@ export const UploadFileComponent = () => {
         }
     };
 
-    const status = 'Uploading';
-    const batchID = '2c11828a-832c-45bd-bcbc-1dacb5142ad9.csv';
-    
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {contextHolder}
@@ -67,8 +64,8 @@ export const UploadFileComponent = () => {
             </Button>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                 <Card title="Upload-status" variant="borderless" style={{ width: 300 }}>
-                    <p>{batchID}</p>
-                    <p>Status: {status}</p>
+                    <p>UUID: {listUpload?.uuid}</p>
+                    <p>Status: {listUpload?.status}</p>
                 </Card>
             </div>
         </div>

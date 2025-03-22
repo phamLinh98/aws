@@ -1,4 +1,4 @@
-export const fetchApiAws = async (file: any, pushNotification: any) => {
+export const fetchApiAws = async (file: any, pushNotification: any, status:any) => {
     try {
         const response = await fetch('https://wf3dzxspb0.execute-api.ap-northeast-1.amazonaws.com/get-url');
         if (!response.ok) {
@@ -11,7 +11,7 @@ export const fetchApiAws = async (file: any, pushNotification: any) => {
         }
 
         // Upload file to S3
-        pushNotification('Uploading file...');
+        pushNotification(status);
         const uploadResponse = await fetch(data_1.presignedUrl, {
             method: 'PUT',
             mode: 'cors',
@@ -21,6 +21,8 @@ export const fetchApiAws = async (file: any, pushNotification: any) => {
             }
         });
 
+        pushNotification(status);
+        
         return uploadResponse;
     } catch (error) {
         console.error(error);
