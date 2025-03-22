@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button, Card, Input, notification } from 'antd';
 import { SmileOutlined } from '@ant-design/icons';
-import { fetchApiAws } from '../api/FetchApiAws';
+import { fetchApiAws } from '../api/FetchApiUrl';
+import { fetchApiGetStatus } from '../api/FetchApiGetStatus';
 
 export const UploadFileComponent = () => {
     const [api, contextHolder] = notification.useNotification();
@@ -56,21 +57,35 @@ export const UploadFileComponent = () => {
 
     const status = 'Uploading';
     const times = 0;
+    
+    // const [statusData, setStatusData] = useState<any>(undefined);
 
-    //TODO: tôi cần truy cập vào dynamoDB có tên upload-csv lấy ra giá trị trường status hiên tại 
+    // useEffect(() => {
+    //     const getStatus = async () => {
+    //         try {
+    //             const statusResponse = await fetchApiGetStatus();
+    //             setStatusData(statusResponse);
+    //         } catch (error) {
+    //             console.error(error);
+    //         }
+    //     };
+    //     getStatus();
+    // }, []);
+
+    // console.log('statusData', statusData);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {contextHolder}
             <Input type="file" onChange={uploadCsvFromPC} />
             <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
-            {uploading ? 'Uploading...' : 'Upload'}
+                {uploading ? 'Uploading...' : 'Upload'}
             </Button>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-            <Card title="Upload-status" variant="borderless" style={{ width: 300 }}>
-                <p>Status: {status}</p>
-                <p>CallAPI: {times}</p>
-            </Card>
+                <Card title="Upload-status" variant="borderless" style={{ width: 300 }}>
+                    <p>Status: {status}</p>
+                    <p>CallAPI: {times}</p>
+                </Card>
             </div>
         </div>
     );

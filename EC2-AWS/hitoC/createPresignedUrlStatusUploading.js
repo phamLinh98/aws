@@ -82,6 +82,10 @@ export async function handler(event) {
 
         // Debug 5
         console.log('5. presignedUrl:', presignedUrl);
+        
+        const apiGetway = 'https://api.linhclass.com/hitoC/getStatusUploadFile';
+        console.log(apiGetway);
+
         return {
             statusCode: 200,
             body: JSON.stringify({ presignedUrl }),
