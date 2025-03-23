@@ -4,8 +4,7 @@ const dynamoDBClient = new DynamoDBClient({});
 
 export async function handler(event) {
     const params = {
-        TableName: 'upload-csv',
-        Limit: 1
+        TableName: 'upload-csv'
     };
 
     try {
@@ -13,8 +12,10 @@ export async function handler(event) {
         const data = await dynamoDBClient.send(command);
 
         if (data.Items && data.Items.length > 0) {
-            const uuid = data.Items[0].id.S; // DynamoDB trả về giá trị dưới dạng đối tượng
-            const status = data.Items[0].status.S; // DynamoDB trả về giá trị dưới dạng đối tượng
+            // Lấy record cuối cùng
+            const lastItem = data.Items[data.Items.length - 1];
+            const uuid = lastItem.id.S; // DynamoDB trả về giá trị dưới dạng đối tượng
+            const status = lastItem.status.S; // DynamoDB trả về giá trị dưới dạng đối tượng
             return {
                 statusCode: 200,
                 body: JSON.stringify({ uuid, status })

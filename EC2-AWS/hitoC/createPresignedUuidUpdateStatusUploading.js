@@ -76,6 +76,7 @@ export async function handler(event) {
     // Debug 5
     console.log('4. params:', params);
 
+    // Get presigned URL for put file to S3
     try {
         const command = new PutObjectCommand(params);
         const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: expiration });
@@ -83,9 +84,6 @@ export async function handler(event) {
         // Debug 5
         console.log('5. presignedUrl:', presignedUrl);
         
-        const apiGetway = 'https://api.linhclass.com/hitoC/getStatusUploadFile';
-        console.log(apiGetway);
-
         return {
             statusCode: 200,
             body: JSON.stringify({ presignedUrl }),
