@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "csv-parser": "^3.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.1"
+  }
+}
