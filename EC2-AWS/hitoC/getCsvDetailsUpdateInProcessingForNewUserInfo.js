@@ -6,6 +6,7 @@ const sqsClient = new SQSClient({ region: 'ap-northeast-1' });
 const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-1' });
 const s3 = new S3Client({ region: 'ap-northeast-1' });
 
+// Tạo bảng User (nếu cần) và cập nhật trạng thái của file CSV thành InProcessing
 async function ensureUsersTableExists() {
     const tableName = 'Users';
 
@@ -43,6 +44,7 @@ export async function handler(event) {
 
         for (const record of event.Records) {
             const body = JSON.parse(record.body);
+            // xử lý lấy message từ queue ? 
             const fileId = body.fileId;
             console.log('File ID:', fileId);
 
@@ -76,6 +78,7 @@ export async function handler(event) {
                 const command = new GetObjectCommand(params);
                 const data = await s3.send(command);
 
+                //Đọc nội dung csv upload lên s3 và insert vào bảng User
                 const streamToString = (stream) =>
                     new Promise((resolve, reject) => {
                         const chunks = [];
@@ -174,11 +177,10 @@ export async function handler(event) {
                         throw dynamoError;
                     }
 
-                    //TODO: Bổ sung logic bảng upload-csv trường status thành InsertSuccess
 
                 }
 
-                // Update upload-csv status to 'InsertSuccess' after processing all users.
+                //TODO: Bổ sung logic bảng upload-csv trường status thành InsertSuccess
                 const updateCsvParams = {
                     TableName: 'upload-csv',
                     Key: {
@@ -196,6 +198,24 @@ export async function handler(event) {
                 await dynamoDbClient.send(updateCsvCommand);
                 console.log(`Status updated to 'InsertSuccess' for fileId: ${fileId}`);
 
+                // Call API Gateway to trigger the next step
+                const apiUrl = 'https://kb3nzijkv2.execute-api.ap-northeast-1.amazonaws.com/get-route';
+                try {
+                    const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
+                        method: 'GET',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status ${response.status}`);
+                    }
+
+                    const responseData = await response.json();
+                    console.log('API response:', responseData);
+                } catch (apiError) {
+                    console.error('Error calling API Gateway:', apiError);
+                    throw apiError;
+                }
+                console.log(`ahihi`);
 
             } catch (error) {
                 console.error('Error reading CSV file from S3:', error);
