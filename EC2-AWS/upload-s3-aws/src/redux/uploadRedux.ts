@@ -2,10 +2,10 @@ import { createSlice } from "@reduxjs/toolkit";
 
 export const Upload = createSlice({
     name: "Comment",
-    initialState: { listUpload: {}, error: '', loading: false },
+    initialState: { listUpload: [], error: '', loading: false },
     reducers: {
-        getUpload: (state, action) => {
-            state.listUpload = { ...state.listUpload, ...action.payload };
+        getUpload: (state:any, action:any) => {
+            state.listUpload = [...state.listUpload, ...action.payload];
             state.loading = false;
         },
         logError: (state, action) => {

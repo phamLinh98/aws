@@ -3,22 +3,28 @@ import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 const dynamoDBClient = new DynamoDBClient({});
 
 export async function handler(event) {
+    console.log('xxx event', JSON.stringify(event));
+
+    const id = event.queryStringParameters.id;
+
     const params = {
         TableName: 'upload-csv',
-        Limit: 1
+        FilterExpression: 'id = :id',
+        ExpressionAttributeValues: {
+            ':id': { S: id }
+        }
     };
 
     try {
         const command = new ScanCommand(params);
         const data = await dynamoDBClient.send(command);
 
-        if (data.Items && data.Items.length > 0) {
-            const uuid = data.Items[0].id.S; // DynamoDB trả về giá trị dưới dạng đối tượng
-            const status = data.Items[0].status.S; // DynamoDB trả về giá trị dưới dạng đối tượng
+        if (data.Items.length > 0) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ uuid, status })
+                body: JSON.stringify(data.Items[0])
             };
+
         } else {
             return {
                 statusCode: 404,

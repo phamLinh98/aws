@@ -86,7 +86,10 @@ export async function handler(event) {
         
         return {
             statusCode: 200,
-            body: JSON.stringify({ presignedUrl }),
+            body: JSON.stringify({ 
+                presignedUrl,
+                id: fileName,
+             }),
         };
     } catch (err) {
         console.error(err);

@@ -1,28 +1,21 @@
-import { useState, useEffect } from 'react';
-import { Button, Card, Input, notification } from 'antd';
 import { SmileOutlined } from '@ant-design/icons';
+import { Button, Card, Input, notification } from 'antd';
+import { useState } from 'react';
 import { fetchApiAws } from '../api/FetchApiUrl';
 import { useFacadeUpload } from '../redux/useFacadeUpload';
-import CountDown from './CountDown';
 
 export const UploadFileComponent = () => {
     const [api, contextHolder] = notification.useNotification();
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
-    const [notificationMes, setNotificationMes] = useState<any>(undefined);
-
-    useEffect(() => {
-        if (notificationMes !== undefined) {
-        }
-    }, [notificationMes]);
+    const [id, setId] = useState(undefined);
+    const { status } = useFacadeUpload(id);
 
     //Upload CSV
     const uploadCsvFromPC = (event: any) => {
         const file = event.target.files[0];
         setSelectedFile(file);
     };
-
-    const { listUpload } = useFacadeUpload();
 
     // Toast
     const openNotification = (message: string) => {
@@ -45,7 +38,7 @@ export const UploadFileComponent = () => {
         try {
             setUploading(true);
 
-            await fetchApiAws(selectedFile, openNotification, listUpload.status); // Gọi fetchApiAws sau khi hiển thị tất cả message
+            await fetchApiAws(selectedFile, openNotification, setId); // Gọi fetchApiAws sau khi hiển thị tất cả message
             setSelectedFile(null);
 
         } catch (error) {
@@ -62,12 +55,12 @@ export const UploadFileComponent = () => {
             <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
                 {uploading ? 'Uploading...' : 'Upload'}
             </Button>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                <Card title="Upload-status" variant="borderless" style={{ width: 300 }}>
-                    <p>UUID: {listUpload?.uuid || '0'}</p>
-                    <p>Status: {listUpload?.status || '0'}</p>
+            {
+                id && status && <Card title="Status" style={{ width: 300 }}>
+                    <p>ID: {id}</p>
+                    <p>Status: {status}</p>
                 </Card>
-            </div>
+            }
         </div>
     );
 };
