@@ -99,7 +99,8 @@ export async function handler(event) {
                 console.log('jsonData', jsonData);
 
                 for (const userData of jsonData) {
-                    const userId = fileId;
+                    // Sử dụng user.id từ file CSV làm ID
+                    const userId = userData.id;
                     const userName = userData.name;
                     const userAge = userData.age ? parseInt(userData.age) : null;
                     const userAvatar = userData.avatar;
