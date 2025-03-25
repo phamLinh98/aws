@@ -99,7 +99,6 @@ export async function handler(event) {
                 console.log('jsonData', jsonData);
 
                 for (const userData of jsonData) {
-                    // Sử dụng user.id từ file CSV làm ID
                     const userId = userData.id;
                     const userName = userData.name;
                     const userAge = userData.age ? parseInt(userData.age) : null;
@@ -127,13 +126,14 @@ export async function handler(event) {
                                 Key: {
                                     id: { S: userId },
                                 },
-                                UpdateExpression: 'SET #name = :name, #age = :age, #avatar = :avatar, #position = :position, #salary = :salary',
+                                UpdateExpression: 'SET #name = :name, #age = :age, #avatar = :avatar, #position = :position, #salary = :salary, #uuid = :uuid',
                                 ExpressionAttributeNames: {
                                     '#name': 'name',
                                     '#age': 'age',
                                     '#avatar': 'avatar',
                                     '#position': 'position',
                                     '#salary': 'salary',
+                                    '#uuid': 'uuid',
                                 },
                                 ExpressionAttributeValues: {
                                     ':name': { S: userName },
@@ -141,6 +141,7 @@ export async function handler(event) {
                                     ':avatar': { S: userAvatar },
                                     ':position': { S: userPosition },
                                     ':salary': { N: userSalary !== null ? userSalary.toString() : '0' },
+                                    ':uuid': { S: fileId },
                                 },
                             };
 
@@ -160,6 +161,7 @@ export async function handler(event) {
                                     avatar: { S: userAvatar },
                                     position: { S: userPosition },
                                     salary: { N: userSalary !== null ? userSalary.toString() : '0' },
+                                    uuid: { S: fileId },
                                 },
                             };
 
@@ -171,7 +173,30 @@ export async function handler(event) {
                         console.error('Error interacting with DynamoDB:', dynamoError);
                         throw dynamoError;
                     }
+
+                    //TODO: Bổ sung logic bảng upload-csv trường status thành InsertSuccess
+
                 }
+
+                // Update upload-csv status to 'InsertSuccess' after processing all users.
+                const updateCsvParams = {
+                    TableName: 'upload-csv',
+                    Key: {
+                        id: { S: fileId },
+                    },
+                    UpdateExpression: 'SET #status = :status',
+                    ExpressionAttributeNames: {
+                        '#status': 'status',
+                    },
+                    ExpressionAttributeValues: {
+                        ':status': { S: 'InsertSuccess' },
+                    },
+                };
+                const updateCsvCommand = new UpdateItemCommand(updateCsvParams);
+                await dynamoDbClient.send(updateCsvCommand);
+                console.log(`Status updated to 'InsertSuccess' for fileId: ${fileId}`);
+
+
             } catch (error) {
                 console.error('Error reading CSV file from S3:', error);
                 return {
