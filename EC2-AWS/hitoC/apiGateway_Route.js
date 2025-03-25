@@ -1,8 +1,8 @@
 export async function handler(event) {
     try {
         const fileId = event.queryStringParameters?.fileId;
-        const apiUrl = 'https://kb3nzijkv2.execute-api.ap-northeast-1.amazonaws.com/update-batch';
-        const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
+        const apiUrlBatchRunning = 'https://kb3nzijkv2.execute-api.ap-northeast-1.amazonaws.com/update-batch';
+        const response = await fetch(`${apiUrlBatchRunning}?fileId=${fileId}`, {
             method: 'GET',
         });
 
