@@ -1,102 +1,85 @@
-import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 
 export async function handler(event) {
+    console.log("Received event:", JSON.stringify(event, null, 2)); // Log the entire event
+
     const s3Client = new S3Client({ region: 'ap-northeast-1' });
+    const dynamoDBClient = new DynamoDBClient({ region: 'ap-northeast-1' });
     const sqsClient = new SQSClient({ region: 'ap-northeast-1' });
 
-    const bucketName = 'linhclass-csv-bucket';
+    const bucketName = event.Records[0].s3.bucket.name;
+    const objectKey = event.Records[0].s3.object.key;
+
+    console.log(`Bucket: ${bucketName}`);
+    console.log(`Object Key: ${objectKey}`);
+
+    if (!objectKey.endsWith('.csv')) {
+        console.log('Not a CSV file.  Exiting.');
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Not a CSV file.  No action taken.' }),
+        };
+    }
 
     try {
-        const params = {
-            Bucket: bucketName,
+        // Extract file ID
+        const fileId = objectKey.split('/').pop().replace('.csv', '');
+        console.log(`Extracted file ID: ${fileId}`);
+
+        // Update status to 'Uploaded' in DynamoDB
+        const tableName = 'upload-csv'; // Replace with your table name
+
+        const updateParams = {
+            TableName: tableName,
+            Key: {
+                id: { S: fileId }, // Assuming 'id' is the primary key and is of type String
+            },
+            UpdateExpression: 'SET #status = :status',
+            ExpressionAttributeNames: {
+                '#status': 'status',
+            },
+            ExpressionAttributeValues: {
+                ':status': { S: 'Uploaded' },
+            },
         };
 
-        // List objects in the bucket
-        const command = new ListObjectsV2Command(params);
-        const data = await s3Client.send(command);
-
-        if (data.Contents && data.Contents.length > 0) {
-            // Filter for CSV files and sort by LastModified in descending order
-            const csvFiles = data.Contents
-                .filter(file => file.Key.endsWith('.csv'))
-                .sort((a, b) => new Date(b.LastModified) - new Date(a.LastModified));
-
-            if (csvFiles.length > 0) {
-                // Get csv first file csv in bucket s3
-                const mostRecentFile = csvFiles[0].Key;
-                const fileId = mostRecentFile.split('/').pop().replace('.csv', '');
-                console.log(`Extracted file ID: ${fileId}`);
-
-                // Update status to 'Uploaded' in DynamoDB
-                const dynamoDBClient = new DynamoDBClient({ region: 'ap-northeast-1' });
-                const tableName = 'upload-csv'; // Replace with your table name
-
-                const updateParams = {
-                    TableName: tableName,
-                    Key: {
-                        id: { S: fileId }, // Assuming 'id' is the primary key and is of type String
-                    },
-                    UpdateExpression: 'SET #status = :status',
-                    ExpressionAttributeNames: {
-                        '#status': 'status',
-                    },
-                    ExpressionAttributeValues: {
-                        ':status': { S: 'Uploaded' },
-                    },
-                };
-
-                try {
-                    const updateCommand = new UpdateItemCommand(updateParams);
-                    await dynamoDBClient.send(updateCommand);
-                    console.log(`Updated status to 'Uploaded' for file ID: ${fileId}`);
-                } catch (error) {
-                    console.error(`Error updating DynamoDB for file ID: ${fileId}`, error);
-                    throw new Error('Failed to update DynamoDB');
-                }
-
-                // Send fileId to SQS
-                const queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue-lambda'; // Replace with your actual SQS queue URL
-                const sqsParams = {
-                    QueueUrl: queueUrl,
-                    MessageBody: JSON.stringify({ fileId }),
-                };
-
-                try {
-                    const sendMessageCommand = new SendMessageCommand(sqsParams);
-                    const sqsResponse = await sqsClient.send(sendMessageCommand);
-                    console.log(`Message sent to SQS with ID: ${sqsResponse.MessageId}`);
-                } catch (error) {
-                    console.error('Error sending message to SQS:', error);
-                    throw new Error('Failed to send message to SQS');
-                }
-
-
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({ fileName: mostRecentFile }),
-                };
-
-            } else {
-                console.log('No CSV files found in the bucket.');
-                return {
-                    statusCode: 404,
-                    body: JSON.stringify({ message: 'No CSV files found in the bucket.' }),
-                };
-            }
-        } else {
-            console.log('No files found in the bucket.');
-            return {
-                statusCode: 404,
-                body: JSON.stringify({ message: 'No files found in the bucket.' }),
-            };
+        try {
+            const updateCommand = new UpdateItemCommand(updateParams);
+            await dynamoDBClient.send(updateCommand);
+            console.log(`Updated status to 'Uploaded' for file ID: ${fileId}`);
+        } catch (error) {
+            console.error(`Error updating DynamoDB for file ID: ${fileId}`, error);
+            throw new Error('Failed to update DynamoDB');
         }
+
+        // Send fileId to SQS
+        const queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue-lambda'; // Replace with your actual SQS queue URL
+        const sqsParams = {
+            QueueUrl: queueUrl,
+            MessageBody: JSON.stringify({ fileId }),
+        };
+
+        try {
+            const sendMessageCommand = new SendMessageCommand(sqsParams);
+            const sqsResponse = await sqsClient.send(sendMessageCommand);
+            console.log(`Message sent to SQS with ID: ${sqsResponse.MessageId}`);
+        } catch (error) {
+            console.error('Error sending message to SQS:', error);
+            throw new Error('Failed to send message to SQS');
+        }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: `Successfully processed file: ${objectKey}` }),
+        };
+
     } catch (error) {
-        console.error('Error fetching file name:', error);
+        console.error('Error processing file:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Internal Server Error' }),
+            body: JSON.stringify({ error: 'Internal Server Error', message: error.message }),
         };
     }
 }
