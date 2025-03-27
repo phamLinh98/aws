@@ -1,8 +1,10 @@
 import { DynamoDBClient, UpdateItemCommand, PutItemCommand, GetItemCommand, CreateTableCommand, ListTablesCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
 
 const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-1' });
 const s3 = new S3Client({ region: 'ap-northeast-1' });
+const sqs = new SQSClient({ region: 'ap-northeast-1' }); // Khởi tạo SQS Client
 
 // Tạo bảng User (nếu cần) và cập nhật trạng thái của file CSV thành InProcessing
 async function ensureUsersTableExists() {
@@ -36,43 +38,48 @@ async function ensureUsersTableExists() {
     }
 }
 
+
+// Hàm xóa message từ SQS
+async function deleteMessageFromQueue(queueUrl, receiptHandle) {
+    const deleteParams = {
+        QueueUrl: queueUrl,
+        ReceiptHandle: receiptHandle,
+    };
+
+    try {
+        await sqs.send(new DeleteMessageCommand(deleteParams));
+        console.log('SQS message deleted successfully.');
+    } catch (error) {
+        console.error('Error deleting SQS message:', error);
+        throw error; // Quan trọng: Re-throw lỗi để Lambda xử lý
+    }
+}
+
 export async function handler(event) {
     try {
         await ensureUsersTableExists();
-
-        // // Listen to SQS messages if have new message
-        // setInterval(async () => {
-        //     const queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue-lambda';
-        //     const params = {
-        //         QueueUrl: queueUrl,
-        //         MaxNumberOfMessages: 10,
-        //     };
-        //     const command = new ReceiveMessageCommand(params);
-        //     const response = await sqsClient.send(command);
-
-        //     if (response.Messages && response.Messages.length > 0) {
-        //         console.log(`Received ${response.Messages.length} messages from SQS.`);
-        //         await processMessages(response);
-
-        //         // Delete the message from the queue
-        //         const deleteParams = {
-        //             QueueUrl: queueUrl,
-        //             ReceiptHandle: response.Messages[0].ReceiptHandle,
-        //         };
-        //         const deleteCommand = new DeleteMessageCommand(deleteParams);
-        //         await sqsClient.send(deleteCommand);
-        //         console.log('Message deleted from SQS.');
-        //     } else {
-        //         console.log('No messages received from SQS.');
-        //     }
-        // }, 5000);
-
         for (const record of event.Records) {
             const body = JSON.parse(record.body);
-            // xử lý lấy message từ queue ? 
+            // xử lý lấy message từ queue ?
             const fileId = body.fileId;
-            console.log('File ID:', fileId);
 
+            //Xoa toàn bộ message từ trên sqs 
+            const queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue-lambda';
+            try {
+                const deleteParams = {
+                    QueueUrl: queueUrl,
+                    ReceiptHandle: record.receiptHandle,
+                };
+
+                await sqs.send(new DeleteMessageCommand(deleteParams));
+                console.log('SQS message deleted successfully.');
+            } catch (error) {
+                console.error('Error deleting SQS message:', error);
+                throw error;
+            }
+
+
+            console.log('File ID:', fileId)
             const updateParams = {
                 TableName: 'upload-csv',
                 Key: {
@@ -221,7 +228,7 @@ export async function handler(event) {
                 await dynamoDbClient.send(updateCsvCommand);
                 console.log(`Status updated to 'InsertSuccess' for fileId: ${fileId}`);
 
-                
+
                 //TODO: Cập nhật trạng thái những record InsertSuccess thành BatchRunning
                 const scanParams = {
                     TableName: 'upload-csv',

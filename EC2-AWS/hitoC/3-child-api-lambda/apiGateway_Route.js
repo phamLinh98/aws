@@ -7,7 +7,7 @@ export const handler = async (event) => {
     // Extract fileId from query string parameters
     const fileId = event.queryStringParameters?.fileId;
     console.log('fileId123', fileId);
-    
+
     if (!fileId) {
       return {
         statusCode: 400,
@@ -18,16 +18,28 @@ export const handler = async (event) => {
     // Define the API URLs
     const apiUrls = [
       'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-avatar',
-      // 'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-roles',
-      // 'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-email',
+      'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-role',
+      'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-mail',
     ];
 
-    // Call all APIs concurrently
-    const apiResponses = await Promise.all(apiUrls.map((url) => fetch(url)));
-    const apiResults = await Promise.all(apiResponses.map((res) => res.json()));
-
-    // Log the API results (optional)
-    console.log('API Results:', apiResults);
+    // Call APIs sequentially
+    const apiResults = [];
+    for (const url of apiUrls) {
+      try {
+        const response = await fetch(url);
+        const result = await response.json();
+        apiResults.push(result);
+        console.log(`API Result for ${url}:`, result); // Log each result
+      } catch (fetchError) {
+        console.error(`Error fetching ${url}:`, fetchError);
+        // Handle the error appropriately - e.g., return an error response,
+        // or continue to the next API call, depending on your requirements.
+        // If you want to fail the whole process on any API failure, re-throw:
+        // throw fetchError;
+        // Or, if you want to just log and continue:
+        apiResults.push({error: fetchError.message}); // Push an error object to results
+      }
+    }
 
     // Update the DynamoDB table
     const updateParams = {
