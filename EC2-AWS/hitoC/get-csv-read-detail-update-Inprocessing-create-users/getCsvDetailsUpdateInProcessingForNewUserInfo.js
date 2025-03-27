@@ -38,23 +38,6 @@ async function ensureUsersTableExists() {
     }
 }
 
-
-// Hàm xóa message từ SQS
-async function deleteMessageFromQueue(queueUrl, receiptHandle) {
-    const deleteParams = {
-        QueueUrl: queueUrl,
-        ReceiptHandle: receiptHandle,
-    };
-
-    try {
-        await sqs.send(new DeleteMessageCommand(deleteParams));
-        console.log('SQS message deleted successfully.');
-    } catch (error) {
-        console.error('Error deleting SQS message:', error);
-        throw error; // Quan trọng: Re-throw lỗi để Lambda xử lý
-    }
-}
-
 export async function handler(event) {
     try {
         await ensureUsersTableExists();
