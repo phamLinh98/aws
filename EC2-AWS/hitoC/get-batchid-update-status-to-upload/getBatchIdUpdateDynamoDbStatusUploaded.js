@@ -1,11 +1,9 @@
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 
 export async function handler(event) {
     console.log("Received event:", JSON.stringify(event, null, 2)); // Log the entire event
 
-    const s3Client = new S3Client({ region: 'ap-northeast-1' });
     const dynamoDBClient = new DynamoDBClient({ region: 'ap-northeast-1' });
     const sqsClient = new SQSClient({ region: 'ap-northeast-1' });
 

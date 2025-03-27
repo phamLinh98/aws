@@ -1,4 +1,4 @@
-import { DynamoDBClient, UpdateItemCommand, PutItemCommand, GetItemCommand, CreateTableCommand, ListTablesCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, UpdateItemCommand, PutItemCommand, GetItemCommand, CreateTableCommand, ListTablesCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-1' });
@@ -201,11 +201,9 @@ export async function handler(event) {
                         console.error('Error interacting with DynamoDB:', dynamoError);
                         throw dynamoError;
                     }
-
-
                 }
 
-                //TODO: Bổ sung logic bảng upload-csv trường status thành InsertSuccess
+                //TODO: Bổ sung logic bảng upload-csv trường status thành InsertSuccess cho uuid = fileId
                 const updateCsvParams = {
                     TableName: 'upload-csv',
                     Key: {
@@ -223,8 +221,50 @@ export async function handler(event) {
                 await dynamoDbClient.send(updateCsvCommand);
                 console.log(`Status updated to 'InsertSuccess' for fileId: ${fileId}`);
 
+                
+                //TODO: Cập nhật trạng thái những record InsertSuccess thành BatchRunning
+                const scanParams = {
+                    TableName: 'upload-csv',
+                    FilterExpression: '#status = :status',
+                    ExpressionAttributeNames: {
+                        '#status': 'status',
+                    },
+                    ExpressionAttributeValues: {
+                        ':status': { S: 'InsertSuccess' },
+                    },
+                };
+
+                const scanCommand = new ScanCommand(scanParams); //HERE
+                console.log('scanCommand', scanCommand);
+                const scanResponse = await dynamoDbClient.send(scanCommand);
+                console.log('scanResponseDemo123', scanResponse.Items)
+                if (scanResponse.Items && scanResponse.Items.length > 0) {
+                    for (const item of scanResponse.Items) {
+                        const updateBatchParams = {
+                            TableName: 'upload-csv',
+                            Key: {
+                                id: item.id,
+                            },
+                            UpdateExpression: 'SET #status = :status',
+                            ExpressionAttributeNames: {
+                                '#status': 'status',
+                            },
+                            ExpressionAttributeValues: {
+                                ':status': { S: 'BatchRunning' },
+                            },
+                        };
+
+                        const updateBatchCommand = new UpdateItemCommand(updateBatchParams);
+                        await dynamoDbClient.send(updateBatchCommand);
+                        console.log(`Status updated to 'BatchRunning' for fileId: ${item.id.S}`);
+                    }
+                } else {
+                    console.log('No records with status "InsertSuccess" found.');
+                }
+                
+
                 // // Call API Gateway to trigger the next step
-                // const apiUrl = 'https://kb3nzijkv2.execute-api.ap-northeast-1.amazonaws.com/get-route';
+                // const apiUrl = 'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-route';
                 // try {
                 //     const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
                 //         method: 'GET',

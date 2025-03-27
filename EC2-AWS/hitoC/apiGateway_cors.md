@@ -1,4 +1,4 @@
-Access-Control-Allow-Origin: http://127.0.0.1:5500
+Access-Control-Allow-Origin: http://localhost:5173
 
 Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS
 
