@@ -75,7 +75,7 @@ export async function handler(event) {
             body: JSON.stringify({ message: `Successfully processed file: ${objectKey}` }),
         };
 
-    } catch (error) {
+    } catch (error) {u
         console.error('Error processing file:', error);
         return {
             statusCode: 500,

@@ -1,8 +1,6 @@
-import { SQSClient } from '@aws-sdk/client-sqs';
 import { DynamoDBClient, UpdateItemCommand, PutItemCommand, GetItemCommand, CreateTableCommand, ListTablesCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
-const sqsClient = new SQSClient({ region: 'ap-northeast-1' });
 const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-1' });
 const s3 = new S3Client({ region: 'ap-northeast-1' });
 
@@ -41,6 +39,33 @@ async function ensureUsersTableExists() {
 export async function handler(event) {
     try {
         await ensureUsersTableExists();
+
+        // // Listen to SQS messages if have new message
+        // setInterval(async () => {
+        //     const queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue-lambda';
+        //     const params = {
+        //         QueueUrl: queueUrl,
+        //         MaxNumberOfMessages: 10,
+        //     };
+        //     const command = new ReceiveMessageCommand(params);
+        //     const response = await sqsClient.send(command);
+
+        //     if (response.Messages && response.Messages.length > 0) {
+        //         console.log(`Received ${response.Messages.length} messages from SQS.`);
+        //         await processMessages(response);
+
+        //         // Delete the message from the queue
+        //         const deleteParams = {
+        //             QueueUrl: queueUrl,
+        //             ReceiptHandle: response.Messages[0].ReceiptHandle,
+        //         };
+        //         const deleteCommand = new DeleteMessageCommand(deleteParams);
+        //         await sqsClient.send(deleteCommand);
+        //         console.log('Message deleted from SQS.');
+        //     } else {
+        //         console.log('No messages received from SQS.');
+        //     }
+        // }, 5000);
 
         for (const record of event.Records) {
             const body = JSON.parse(record.body);
@@ -198,24 +223,24 @@ export async function handler(event) {
                 await dynamoDbClient.send(updateCsvCommand);
                 console.log(`Status updated to 'InsertSuccess' for fileId: ${fileId}`);
 
-                // Call API Gateway to trigger the next step
-                const apiUrl = 'https://kb3nzijkv2.execute-api.ap-northeast-1.amazonaws.com/get-route';
-                try {
-                    const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
-                        method: 'GET',
-                    });
+                // // Call API Gateway to trigger the next step
+                // const apiUrl = 'https://kb3nzijkv2.execute-api.ap-northeast-1.amazonaws.com/get-route';
+                // try {
+                //     const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
+                //         method: 'GET',
+                //     });
 
-                    if (!response.ok) {
-                        throw new Error(`API call failed with status ${response.status}`);
-                    }
+                //     if (!response.ok) {
+                //         throw new Error(`API call failed with status ${response.status}`);
+                //     }
 
-                    const responseData = await response.json();
-                    console.log('API response:', responseData);
-                } catch (apiError) {
-                    console.error('Error calling API Gateway:', apiError);
-                    throw apiError;
-                }
-                console.log(`ahihi`);
+                //     const responseData = await response.json();
+                //     console.log('API response:', responseData);
+                // } catch (apiError) {
+                //     console.error('Error calling API Gateway:', apiError);
+                //     throw apiError;
+                // }
+                // console.log(`ahihi`);
 
             } catch (error) {
                 console.error('Error reading CSV file from S3:', error);
