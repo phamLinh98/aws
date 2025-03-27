@@ -257,31 +257,28 @@ export async function handler(event) {
                         const updateBatchCommand = new UpdateItemCommand(updateBatchParams);
                         await dynamoDbClient.send(updateBatchCommand);
                         console.log(`Status updated to 'BatchRunning' for fileId: ${item.id.S}`);
+
+                        // Fetch API with item.id
+                        const apiUrl = 'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-route';
+                        const fileId = encodeURIComponent(item.id.S);
+                        try {
+                            const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
+                                method: 'GET',
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`API call failed with status ${response.status}`);
+                            }
+
+                            const responseData = await response.json();
+                            console.log(`API response for fileId ${item.id.S}:`, responseData);
+                        } catch (apiError) {
+                            console.error(`Error calling API Gateway for fileId ${item.id.S}:`, apiError);
+                        }
                     }
                 } else {
                     console.log('No records with status "InsertSuccess" found.');
                 }
-                
-
-                // // Call API Gateway to trigger the next step
-                // const apiUrl = 'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-route';
-                // try {
-                //     const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
-                //         method: 'GET',
-                //     });
-
-                //     if (!response.ok) {
-                //         throw new Error(`API call failed with status ${response.status}`);
-                //     }
-
-                //     const responseData = await response.json();
-                //     console.log('API response:', responseData);
-                // } catch (apiError) {
-                //     console.error('Error calling API Gateway:', apiError);
-                //     throw apiError;
-                // }
-                // console.log(`ahihi`);
-
             } catch (error) {
                 console.error('Error reading CSV file from S3:', error);
                 return {

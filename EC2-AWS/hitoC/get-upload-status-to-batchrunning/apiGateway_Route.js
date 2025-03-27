@@ -1,20 +1,10 @@
 export async function handler(event) {
-    try {
-        const fileId = event.queryStringParameters?.fileId;
-        const apiUrlBatchRunning = 'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/update-batch';
-        const response = await fetch(`${apiUrlBatchRunning}?fileId=${fileId}`, {
-            method: 'GET',
-        });
-
-        if (!response.ok) {
-            throw new Error(`API call failed with status ${response.status}`);
-        }
-
-        const responseData = await response.json();
-        console.log('API response:', responseData);
-    } catch (apiError) {
-        console.error('Error calling API Gateway:', apiError);
-        throw apiError;
-    }
-    console.log(`ahihi`);
+    console.log('Full event:', JSON.stringify(event, null, 2)); // In toàn bộ event để debug
+    console.log('event.queryStringParameters', event.queryStringParameters); // In queryStringParameters
+    const fileId = event.queryStringParameters?.fileId;
+    console.log('fileId', fileId);
+    return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Received fileId: ' + fileId }),
+    };
 }
