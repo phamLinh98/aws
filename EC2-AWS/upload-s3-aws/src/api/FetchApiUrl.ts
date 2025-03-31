@@ -1,6 +1,6 @@
 export const fetchApiAws = async (file: any, pushNotification: any, setId: any) => {
     try {
-        const response = await fetch('https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-url');
+        const response = await fetch('https://cssfahw7v5.execute-api.ap-northeast-1.amazonaws.com/get-url');
         if (!response.ok) {
             throw new Error("Failed to get presigned URL");
         }

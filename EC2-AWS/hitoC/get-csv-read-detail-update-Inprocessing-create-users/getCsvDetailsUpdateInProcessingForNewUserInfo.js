@@ -14,7 +14,7 @@ async function ensureUsersTableExists() {
     const tables = await dynamoDbClient.send(listTablesCommand);
 
     if (!tables.TableNames.includes(tableName)) {
-        console.log(`Table ${tableName} does not exist. Creating table...`);
+        console.log(`F0. Table ${tableName} does not exist. Creating table...`);
 
         const createTableParams = {
             TableName: tableName,
@@ -32,9 +32,9 @@ async function ensureUsersTableExists() {
 
         const createTableCommand = new CreateTableCommand(createTableParams);
         await dynamoDbClient.send(createTableCommand);
-        console.log(`Table ${tableName} created successfully.`);
+        console.log(`F1. Table ${tableName} created successfully.`);
     } else {
-        console.log(`Table ${tableName} already exists.`);
+        console.log(`F2. Table ${tableName} already exists.`);
     }
 }
 
@@ -46,23 +46,7 @@ export async function handler(event) {
             // xử lý lấy message từ queue ?
             const fileId = body.fileId;
 
-            //Xoa toàn bộ message từ trên sqs 
-            const queueUrl = 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue-lambda';
-            try {
-                const deleteParams = {
-                    QueueUrl: queueUrl,
-                    ReceiptHandle: record.receiptHandle,
-                };
-
-                await sqs.send(new DeleteMessageCommand(deleteParams));
-                console.log('SQS message deleted successfully.');
-            } catch (error) {
-                console.error('Error deleting SQS message:', error);
-                throw error;
-            }
-
-
-            console.log('File ID:', fileId)
+            console.log('M1. File ID:', fileId)
             const updateParams = {
                 TableName: 'upload-csv',
                 Key: {
@@ -78,7 +62,7 @@ export async function handler(event) {
             };
             const updateCommand = new UpdateItemCommand(updateParams);
             await dynamoDbClient.send(updateCommand);
-            console.log(`Status updated to 'InProcessing' for fileId: ${fileId}`);
+            console.log(`M2. Status updated to 'InProcessing' for fileId: ${fileId}`);
 
             const bucketName = 'linhclass-csv-bucket';
             const keyName = `csv/${fileId}.csv`;
@@ -114,7 +98,7 @@ export async function handler(event) {
                     return obj;
                 });
 
-                console.log('jsonData', jsonData);
+                console.log('M3. jsonData', jsonData);
 
                 for (const userData of jsonData) {
                     const userId = userData.id;
@@ -137,7 +121,7 @@ export async function handler(event) {
                         const getUserResponse = await dynamoDbClient.send(getUserCommand);
 
                         if (getUserResponse.Item) {
-                            console.log(`User with ID ${userId} exists. Updating user.`);
+                            console.log(`M4.1.1. User with ID ${userId} exists. Updating user.`);
 
                             const updateParams = {
                                 TableName: userTableName,
@@ -166,9 +150,9 @@ export async function handler(event) {
                             const updateCommand = new UpdateItemCommand(updateParams);
                             await dynamoDbClient.send(updateCommand);
 
-                            console.log(`User with ID ${userId} updated successfully.`);
+                            console.log(`M4.1.2. User with ID ${userId} updated successfully.`);
                         } else {
-                            console.log(`User with ID ${userId} does not exist. Inserting new user.`);
+                            console.log(`M4.2.1. User with ID ${userId} does not exist. Inserting new user.`);
 
                             const putParams = {
                                 TableName: userTableName,
@@ -185,10 +169,10 @@ export async function handler(event) {
 
                             const putCommand = new PutItemCommand(putParams);
                             await dynamoDbClient.send(putCommand);
-                            console.log(`User with ID ${userId} inserted successfully.`);
+                            console.log(`4.2.2. User with ID ${userId} inserted successfully.`);
                         }
                     } catch (dynamoError) {
-                        console.error('Error interacting with DynamoDB:', dynamoError);
+                        console.error('E1. Error interacting with DynamoDB:', dynamoError);
                         throw dynamoError;
                     }
                 }
@@ -209,7 +193,7 @@ export async function handler(event) {
                 };
                 const updateCsvCommand = new UpdateItemCommand(updateCsvParams);
                 await dynamoDbClient.send(updateCsvCommand);
-                console.log(`Status updated to 'InsertSuccess' for fileId: ${fileId}`);
+                console.log(`M5. Status updated to 'InsertSuccess' for fileId: ${fileId}`);
 
 
                 //TODO: Cập nhật trạng thái những record InsertSuccess thành BatchRunning
@@ -225,9 +209,9 @@ export async function handler(event) {
                 };
 
                 const scanCommand = new ScanCommand(scanParams); //HERE
-                console.log('scanCommand', scanCommand);
+                console.log('M6. scanCommand', scanCommand);
                 const scanResponse = await dynamoDbClient.send(scanCommand);
-                console.log('scanResponseDemo123', scanResponse.Items)
+                console.log('M7. scanResponseDemo123', scanResponse.Items)
                 if (scanResponse.Items && scanResponse.Items.length > 0) {
                     for (const item of scanResponse.Items) {
                         const updateBatchParams = {
@@ -246,10 +230,24 @@ export async function handler(event) {
 
                         const updateBatchCommand = new UpdateItemCommand(updateBatchParams);
                         await dynamoDbClient.send(updateBatchCommand);
-                        console.log(`Status updated to 'BatchRunning' for fileId: ${item.id.S}`);
+                        console.log(`M8.1 tatus updated to 'BatchRunning' for fileId: ${item.id.S}`);
+
+                        // console.log('M10. CSV file processed successfully.');
+
+                        // Xóa message từ queue
+                        console.log('M9. Deleting message from SQS', JSON.stringify(event));
+                        const handle = event.Records[0].receiptHandle;
+                        const deleteMessageParams = {
+                            QueueUrl: 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue-lambda',
+                            ReceiptHandle: handle,
+                        };
+
+                        const deleteMessageCommand = new DeleteMessageCommand(deleteMessageParams);
+                        await sqs.send(deleteMessageCommand);
+                        console.log('M10. Message deleted from SQS, deleleMessageCommand', deleteMessageCommand);
 
                         // Fetch API with item.id
-                        const apiUrl = 'https://ne3j40rhmj.execute-api.ap-northeast-1.amazonaws.com/get-route';
+                        const apiUrl = 'https://cssfahw7v5.execute-api.ap-northeast-1.amazonaws.com/get-route';
                         const fileId = encodeURIComponent(item.id.S);
                         try {
                             const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
@@ -257,20 +255,29 @@ export async function handler(event) {
                             });
 
                             if (!response.ok) {
+                                console.log(`M11. API call failed with status ${response.status}`);
                                 throw new Error(`API call failed with status ${response.status}`);
                             }
 
                             const responseData = await response.json();
-                            console.log(`API response for fileId ${item.id.S}:`, responseData);
+                            console.log(`M11. API response for fileId ${item.id.S}:`, responseData);
                         } catch (apiError) {
-                            console.error(`Error calling API Gateway for fileId ${item.id.S}:`, apiError);
+                            console.error(`E2. Error calling API Gateway for fileId ${item.id.S}:`, apiError);
                         }
                     }
                 } else {
-                    console.log('No records with status "InsertSuccess" found.');
+                    console.log('M8.2. No records with status "InsertSuccess" found.');
                 }
+
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({ message: 'CSV file processed successfully.' }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
             } catch (error) {
-                console.error('Error reading CSV file from S3:', error);
+                console.error('E3. Error reading CSV file from S3:', error);
                 return {
                     statusCode: 500,
                     body: JSON.stringify({ message: 'Error reading CSV file from S3.' }),
@@ -280,8 +287,16 @@ export async function handler(event) {
                 };
             }
         }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'CSV file processed successfully.' }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        };
     } catch (error) {
-        console.error('Error processing SQS message:', error);
+        console.error('E4. Error processing CSV file:', error);
         throw error;
     }
 }

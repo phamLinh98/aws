@@ -3,7 +3,7 @@ import { DynamoDBClient, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-
 
 const SOURCE_BUCKET = "linhclass-csv-bucket";
 const DESTINATION_BUCKET = "linhclass-storage-bucket";
-const S3_KEY = "picture/1742982504713.jpeg";
+const S3_KEY = "picture/linh123.jpg";
 const DESTINATION_KEY = "linh.jpeg";
 const DYNAMODB_TABLE = "Users";
 const AWS_REGION = 'ap-northeast-1';
