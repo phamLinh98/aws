@@ -1,6 +1,6 @@
 import { DynamoDBClient, UpdateItemCommand, PutItemCommand, GetItemCommand, CreateTableCommand, ListTablesCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
+import { SQSClient, DeleteMessageCommand } from "@aws-sdk/client-sqs";
 
 const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-1' });
 const s3 = new S3Client({ region: 'ap-northeast-1' });
