@@ -1,0 +1,167 @@
+{
+    "Transform": "AWS::Serverless-2016-10-31",
+    "Resources": {
+        "user": {
+            "Type": "AWS::Serverless::Api",
+            "Properties": {
+                "Name": {
+                    "Fn::Sub": [
+                        "${ResourceName} From Stack ${AWS::StackName}",
+                        {
+                            "ResourceName": "user"
+                        }
+                    ]
+                },
+                "StageName": "Prod",
+                "DefinitionBody": {
+                    "openapi": "3.0",
+                    "info": {},
+                    "paths": {
+                        "/": {
+                            "get": {
+                                "x-amazon-apigateway-integration": {
+                                    "httpMethod": "POST",
+                                    "type": "aws_proxy",
+                                    "uri": {
+                                        "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getUserLambda.Arn}/invocations"
+                                    }
+                                },
+                                "responses": {}
+                            }
+                        }
+                    }
+                },
+                "EndpointConfiguration": "REGIONAL",
+                "TracingEnabled": true,
+                "Cors": {
+                    "MaxAge": 5
+                }
+            }
+        },
+        "getUserLambda": {
+            "Type": "AWS::Serverless::Function",
+            "Properties": {
+                "Description": {
+                    "Fn::Sub": [
+                        "Stack ${AWS::StackName} Function ${ResourceName}",
+                        {
+                            "ResourceName": "getUserLambda"
+                        }
+                    ]
+                },
+                "CodeUri": "src/Function",
+                "Handler": "index.handler",
+                "Runtime": "nodejs22.x",
+                "MemorySize": 3008,
+                "Timeout": 30,
+                "Tracing": "Active",
+                "Events": {
+                    "userGET": {
+                        "Type": "Api",
+                        "Properties": {
+                            "Path": "/",
+                            "Method": "GET",
+                            "RestApiId": {
+                                "Ref": "user"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "getUserLambdaLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "LogGroupName": {
+                    "Fn::Sub": "/aws/lambda/${getUserLambda}"
+                }
+            }
+        },
+        "Api": {
+            "Type": "AWS::Serverless::Api",
+            "Properties": {
+                "Name": {
+                    "Fn::Sub": [
+                        "${ResourceName} From Stack ${AWS::StackName}",
+                        {
+                            "ResourceName": "Api"
+                        }
+                    ]
+                },
+                "StageName": "Prod",
+                "DefinitionBody": {
+                    "openapi": "3.0",
+                    "info": {},
+                    "paths": {
+                        "/": {
+                            "get": {
+                                "x-amazon-apigateway-integration": {
+                                    "httpMethod": "POST",
+                                    "type": "aws_proxy",
+                                    "uri": {
+                                        "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${createUser.Arn}/invocations"
+                                    }
+                                },
+                                "responses": {}
+                            }
+                        }
+                    }
+                },
+                "EndpointConfiguration": "REGIONAL",
+                "TracingEnabled": true
+            }
+        },
+        "createUser": {
+            "Type": "AWS::Serverless::Function",
+            "Properties": {
+                "Description": {
+                    "Fn::Sub": [
+                        "Stack ${AWS::StackName} Function ${ResourceName}",
+                        {
+                            "ResourceName": "createUser"
+                        }
+                    ]
+                },
+                "CodeUri": "src/Function2",
+                "Handler": "index.handler",
+                "Runtime": "nodejs22.x",
+                "MemorySize": 3008,
+                "Timeout": 30,
+                "Tracing": "Active",
+                "Events": {
+                    "ApiGET": {
+                        "Type": "Api",
+                        "Properties": {
+                            "Path": "/",
+                            "Method": "GET",
+                            "RestApiId": {
+                                "Ref": "Api"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "createUserLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "LogGroupName": {
+                    "Fn::Sub": "/aws/lambda/${createUser}"
+                }
+            }
+        }
+    },
+    "Metadata": {
+        "AWS::Composer::Groups": {
+            "Group": {
+                "Label": "Group",
+                "Members": [
+                    "Api",
+                    "user"
+                ]
+            }
+        }
+    }
+}
