@@ -1,0 +1,169 @@
+<mxfile host="app.diagrams.net" modified="2025-01-01T00:00:00Z" agent="Mozilla/5.0" etag="SeqDiagram" version="15.8.7"
+    type="device">
+    <diagram id="sequenceDiagram1" name="Sequence Diagram - Upload &amp; Processing Flow">
+        <mxGraphModel>
+            <root>
+                <!-- Layer gốc -->
+                <mxCell id="0" />
+                <!-- Layer chính -->
+                <mxCell id="1" parent="0" />
+
+                <!-- ========== CÁC PARTICIPANT (HÌNH CHỮ NHẬT) ========== -->
+                <!-- 1) User -->
+                <mxCell id="2" value="User"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="50" y="50" width="100" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- 2) LambdaA1 -->
+                <mxCell id="3" value="LambdaA1"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="250" y="50" width="120" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- 3) upload-status DB -->
+                <mxCell id="4" value="upload-status DB"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="450" y="50" width="140" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- 4) S3 Bucket -->
+                <mxCell id="5" value="S3 Bucket"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="650" y="50" width="100" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- 5) LambdaA2 -->
+                <mxCell id="6" value="LambdaA2"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="850" y="50" width="120" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- 6) SQS / EventBridge -->
+                <mxCell id="7" value="SQS / EventBridge"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="1050" y="50" width="140" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- 7) LambdaA3 -->
+                <mxCell id="8" value="LambdaA3"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="1250" y="50" width="120" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- 8) DynamoDB Users -->
+                <mxCell id="9" value="DynamoDB Users"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="1450" y="50" width="140" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- 9) API-1,2,3 -->
+                <mxCell id="10" value="API-1,2,3"
+                    style="shape=rectangle;whiteSpace=wrap;align=center;verticalAlign=middle;strokeWidth=1;strokeColor=#000000;fillColor=#ffffff;"
+                    vertex="1" parent="1">
+                    <mxGeometry x="1650" y="50" width="100" height="40" as="geometry" />
+                </mxCell>
+
+                <!-- ========== CÁC ĐƯỜNG KẾT NỐI (MESSAGES) ========== -->
+                <!-- (1) user -> lA1 -->
+                <mxCell id="20" value="(1) Yêu cầu Presigned URL"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="2" target="3">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (2) lA1 -> dbStatus -->
+                <mxCell id="21" value="Tạo record (status=&quot;Uploading&quot;)"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="3" target="4">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (3) lA1 -> user -->
+                <mxCell id="22" value="(2) Trả về Presigned URL" style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;"
+                    edge="1" parent="1" source="3" target="2">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (4) user -> s3 -->
+                <mxCell id="23" value="(3) Upload CSV qua Presigned URL"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="2" target="5">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (5) s3 -> lA2 -->
+                <mxCell id="24" value="(4) Trigger Lambda khi PUT file"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="5" target="6">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (6) lA2 -> dbStatus -->
+                <mxCell id="25" value="(5) update status=&quot;Uploaded&quot;"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="6" target="4">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (7) lA2 -> sqs -->
+                <mxCell id="26" value="(6) Gửi batchID" style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1"
+                    parent="1" source="6" target="7">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (8) sqs -> lA3 -->
+                <mxCell id="27" value="(7) Trigger xử lý CSV" style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;"
+                    edge="1" parent="1" source="7" target="8">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (9) lA3 -> dbStatus -->
+                <mxCell id="28" value="(8) update status=&quot;InProcessing&quot;"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="8" target="4">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (10) lA3 -> s3 -->
+                <mxCell id="29" value="(9) Đọc nội dung CSV" style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;"
+                    edge="1" parent="1" source="8" target="5">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (11) lA3 -> dbUsers -->
+                <mxCell id="30" value="(10) Insert dữ liệu Users"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="8" target="9">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (12) lA3 -> dbStatus -->
+                <mxCell id="31" value="(11) update status=&quot;InsertSuccess&quot;"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="8" target="4">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (13) lA3 -> dbStatus -->
+                <mxCell id="32" value="(12) update status=&quot;BatchRunning&quot;"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="8" target="4">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (14) lA3 -> API-1,2,3 -->
+                <mxCell id="33" value="(13) Gọi 3 API (Avatar, Default role, Email)"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="8" target="10">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+                <!-- (15) lA3 -> dbStatus -->
+                <mxCell id="34" value="(14) update status=&quot;Success&quot;"
+                    style="edgeStyle=elbowEdgeStyle;endArrow=block;html=1;" edge="1" parent="1" source="8" target="4">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>
+
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
