@@ -34,7 +34,7 @@ Resources:
   LambdaA1:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: LambdaA1
+      FunctionName: getPresignedUrlLambda
       Handler: index.handler
       Runtime: nodejs18.x
       Code:
