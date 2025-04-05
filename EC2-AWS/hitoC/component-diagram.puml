@@ -1,0 +1,41 @@
+@startuml ComponentDiagram
+title Component Diagram - Logical Architecture
+
+skinparam component {
+  FontSize 14
+  BackgroundColor #white
+  BorderColor black
+}
+
+' Định nghĩa các thành phần chính
+component "LambdaA1" as compL1
+component "upload-status DB" as compDbStatus
+component "S3 Bucket" as compS3
+component "LambdaA2" as compL2
+component "SQS / EventBridge" as compSQS
+component "LambdaA3" as compL3
+component "DynamoDB Users" as compDbUsers
+component "API-1,2,3" as compAPIs
+
+actor "User" as user
+
+' Mô tả tương tác
+user --> compL1 : (1) Request Presigned URL
+compL1 --> compDbStatus : Create & update record (status)
+compL1 --> user : Return Presigned URL
+
+user --> compS3 : (2) Upload CSV via Presigned URL
+compS3 --> compL2 : (3) Trigger on file PUT
+
+compL2 --> compDbStatus : Update status (Uploaded)
+compL2 --> compSQS : Send batchID
+
+compSQS --> compL3 : (4) Trigger CSV processing
+
+compL3 --> compDbStatus : Update status (InProcessing -> Success)
+compL3 --> compS3 : Read CSV content
+compL3 --> compDbUsers : Insert user data
+compL3 --> compAPIs : Call 3 external APIs
+compL3 --> compDbStatus : Final update (Success)
+
+@endumls

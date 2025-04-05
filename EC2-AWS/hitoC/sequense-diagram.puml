@@ -1,0 +1,47 @@
+@startuml BasicDesignSequence
+title Upload & Processing Flow
+
+skinparam participant {
+  BackgroundColor white
+  BorderColor black
+  FontSize 14
+}
+
+actor User as user
+participant "LambdaA1" as lA1
+participant "upload-status DB" as dbStatus
+participant "S3 Bucket" as s3
+participant "LambdaA2" as lA2
+participant "SQS / EventBridge" as sqs
+participant "LambdaA3" as lA3
+database "DynamoDB Users" as dbUsers
+participant "API-1,2,3" as apis
+
+user -> lA1: (1) Yêu cầu Presigned URL
+activate lA1
+lA1 -> dbStatus: Tạo record (status="Uploading")
+lA1 -> user: (2) Trả về Presigned URL
+deactivate lA1
+
+user -> s3: (3) Upload CSV bằng Presigned URL
+activate s3
+s3 -> lA2: (4) Trigger Lambda khi PUT file
+deactivate s3
+
+activate lA2
+lA2 -> dbStatus: (5) update status="Uploaded"
+lA2 -> sqs: (6) Gửi batchID
+deactivate lA2
+
+sqs -> lA3: (7) Trigger xử lý CSV
+activate lA3
+lA3 -> dbStatus: (8) update status="InProcessing"
+lA3 -> s3: (9) Đọc nội dung CSV
+lA3 -> dbUsers: (10) Insert dữ liệu Users
+lA3 -> dbStatus: (11) update status="InsertSuccess"
+
+lA3 -> dbStatus: (12) update status="BatchRunning"
+lA3 -> apis: (13) Gọi 3 API (Tạo avatar, Default role, Tạo email)
+lA3 -> dbStatus: (14) update status="Success"
+deactivate lA3
+@enduml

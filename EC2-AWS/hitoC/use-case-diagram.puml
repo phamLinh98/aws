@@ -1,0 +1,33 @@
+@startuml UseCaseDiagram
+title Use Case Diagram - Upload & Processing Flow
+
+' Chỉnh sửa giao diện cho phù hợp
+skinparam actorStyle awesome
+skinparam usecase {
+  BorderColor black
+  BackgroundColor #white
+  FontSize 14
+}
+
+' Định nghĩa actor
+actor "User" as user
+
+' Tạo 1 boundary (rectangle) đại diện cho hệ thống
+rectangle "Upload & Processing System" {
+  usecase "Get Presigned URL" as UC_GetURL
+  usecase "Upload CSV via Presigned URL" as UC_Upload
+  usecase "Process CSV" as UC_Process
+  usecase "Insert User Data" as UC_InsertData
+  usecase "Call 3 APIs\n(Avatar, Role, Email)" as UC_CallAPIs
+}
+
+' Liên kết actor với các Use Case
+user --> UC_GetURL : (1) Request/Receive URL
+user --> UC_Upload : (2) Upload file
+
+' Use case này chạy ngầm sau khi Upload
+UC_Upload --> UC_Process : triggers processing
+UC_Process --> UC_InsertData : triggers data insertion
+UC_InsertData --> UC_CallAPIs : triggers external calls
+
+@enduml

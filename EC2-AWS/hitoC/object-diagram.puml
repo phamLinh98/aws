@@ -1,0 +1,68 @@
+@startuml ObjectDiagram
+title Object Diagram - Instances & Their Relationships
+
+skinparam object {
+  BackgroundColor #white
+  BorderColor black
+  FontSize 14
+}
+
+' Khai báo các đối tượng (instance)
+object "User" as objUser {
+  + userId : String
+  + role : String = "end-user"
+}
+
+object "LambdaA1" as objL1 {
+  + functionName : "LambdaA1"
+  + responsibility : "Generate Presigned URL"
+  + calls : "dbStatus"
+}
+
+object "upload-status DB" as objDBStatus {
+  + tableName : "UploadStatus"
+  + status : "Uploading, Uploaded, InProcessing, Success, ..."
+}
+
+object "S3 Bucket" as objS3 {
+  + bucketName : "my-upload-bucket"
+  + purpose : "Stores CSV files"
+}
+
+object "LambdaA2" as objL2 {
+  + functionName : "LambdaA2"
+  + responsibility : "Update status & send SQS msg"
+}
+
+object "SQS / EventBridge" as objSQS {
+  + queueName : "CSVProcessingQueue"
+  + message : "batchID"
+}
+
+object "LambdaA3" as objL3 {
+  + functionName : "LambdaA3"
+  + responsibility : "Process CSV, Insert Data, Call APIs"
+}
+
+object "DynamoDB Users" as objDbUsers {
+  + tableName : "Users"
+}
+
+object "API-1,2,3" as objAPIs {
+  + services : "Create Avatar, Default Role, Email"
+}
+
+' Các quan hệ giữa các đối tượng
+objUser -- objL1 : requests presigned URL
+objL1 -- objDBStatus : updates record
+objL1 -- objS3 : returns presigned info to user
+objS3 -- objL2 : triggers on file PUT
+objL2 -- objDBStatus : update status
+objL2 -- objSQS : send batchId
+objSQS -- objL3 : triggers processing
+objL3 -- objDBStatus : update status
+objL3 -- objS3 : reads CSV content
+objL3 -- objDbUsers : insert user data
+objL3 -- objAPIs : calls external APIs
+
+@enduml
