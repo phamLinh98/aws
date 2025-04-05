@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for Upload & Processing Flow
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: upload-processing-bucket
+
+  UploadStatusTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: upload-status
+      AttributeDefinitions:
+        - AttributeName: batchID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: batchID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: users
+      AttributeDefinitions:
+        - AttributeName: userID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  LambdaA1:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaA1
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            // LambdaA1 logic
+          };
+      Environment:
+        Variables:
+          UPLOAD_STATUS_TABLE: !Ref UploadStatusTable
+
+  LambdaA2:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaA2
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            // LambdaA2 logic
+          };
+      Environment:
+        Variables:
+          UPLOAD_STATUS_TABLE: !Ref UploadStatusTable
+
+  LambdaA3:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaA3
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            // LambdaA3 logic
+          };
+      Environment:
+        Variables:
+          UPLOAD_STATUS_TABLE: !Ref UploadStatusTable
+          USERS_TABLE: !Ref UsersTable
+
+  S3BucketNotification:
+    Type: AWS::S3::BucketNotification
+    Properties:
+      Bucket: !Ref S3Bucket
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:Put
+            Function: !GetAtt LambdaA2.Arn
+
+  SQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: processing-queue
+
+  EventBridgeRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: ProcessingRule
+      EventPattern:
+        source:
+          - "aws.s3"
+      Targets:
+        - Arn: !GetAtt SQSQueue.Arn
+          Id: "SQSQueueTarget"
+
+  LambdaA3TriggerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LambdaA3
+      Action: lambda:InvokeFunction
+      Principal: sqs.amazonaws.com
+      SourceArn: !GetAtt SQSQueue.Arn
+
+Outputs:
+  S3BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref S3Bucket
+
+  UploadStatusTableName:
+    Description: Name of the DynamoDB table for upload status
+    Value: !Ref UploadStatusTable
+
+  UsersTableName:
+    Description: Name of the DynamoDB table for users
+    Value: !Ref UsersTable

@@ -8,7 +8,7 @@ skinparam component {
 }
 
 ' Định nghĩa các thành phần chính
-component "LambdaA1" as compL1
+component "Get PreUrl Lamda" as compL1
 component "upload-status DB" as compDbStatus
 component "S3 Bucket" as compS3
 component "LambdaA2" as compL2
