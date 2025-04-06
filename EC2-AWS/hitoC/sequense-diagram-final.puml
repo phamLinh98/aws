@@ -1,0 +1,94 @@
+@startuml
+title CSV Import Flow - Sequence Diagram
+
+actor User as user
+participant "UI/Client" as client
+participant "API Gateway" as api
+participant "Lambda (Presign)" as lambdaPre
+participant "S3 linhclass-csv-bucket" as s3
+participant "Lambda (Upload End)" as lambdaUpload
+participant "SQS (Main Queue)" as mainQueue
+participant "Lambda (Main Processor)" as lambdaMain
+participant "API Gateway (Batch APIs)" as batchApi
+participant "Lambda (API-1)" as lambda1
+participant "Lambda (API-2)" as lambda2
+participant "Lambda (API-3)" as lambda3
+participant "S3 (image-bucket)" as storage
+participant "S3 (avatar-bucket)" as avatar
+participant "DynamoDB (User / upload-status)" as db
+participant "SQS (DeadQueue)" as deadQueue
+participant "Lambda (Error Logger)" as lambdaErr
+
+'--- BẮT ĐẦU QUÁ TRÌNH UPLOAD CSV ---
+user -> client: Chọn file CSV để upload
+client -> api: (1) Gửi yêu cầu lấy presigned URL
+activate api
+api -> lambdaPre: Gọi Lambda tạo presigned URL
+activate lambdaPre
+lambdaPre -> db: Insert record vào bảng `upload-status` (status="Uploading")
+lambdaPre -> client: Trả về presigned URL kèm batchID
+deactivate lambdaPre
+deactivate api
+
+'--- CLIENT UPLOAD FILE TỚI S3 QUA PRESIGNED URL ---
+client -> s3: (2) PUT CSV (tên batchID.csv)
+activate s3
+s3 -> lambdaUpload: Trigger khi file CSV được upload xong
+deactivate s3
+
+'--- LAMBDA KHI UPLOAD S3 XONG ---
+activate lambdaUpload
+lambdaUpload -> db: Cập nhật upload-status="Uploaded" cho batchID
+lambdaUpload -> mainQueue: Gửi message (chứa batchID)
+deactivate lambdaUpload
+
+'--- SQS MAIN QUEUE GỌI LAMBDA CHÍNH XỬ LÝ CSV ---
+activate mainQueue
+mainQueue -> lambdaMain: Trigger kèm batchID
+deactivate mainQueue
+
+activate lambdaMain
+lambdaMain -> db: upload-status="InProcessing"
+lambdaMain -> s3: Đọc nội dung CSV (batchID.csv)
+lambdaMain -> db: Insert list user vào DynamoDB (bảng User)
+lambdaMain -> db: upload-status="InsertSuccess"
+
+'--- GỌI 3 API LIÊN TIẾP (API-1, API-2, API-3) ---
+lambdaMain -> batchApi: Lặp qua từng user, lần lượt gọi 3 API
+activate batchApi
+
+'--- API-1 ---
+batchApi -> lambda1: API-1: Tạo avatar (copy ảnh từ storage -> avatar)
+activate lambda1
+lambda1 -> storage: Lấy ảnh gốc
+lambda1 -> avatar: Tạo file ảnh user.id
+lambda1 -> db: (nếu cần cập nhật / log)
+deactivate lambda1
+
+'--- API-2 ---
+batchApi -> lambda2: API-2: Gán default role=employee
+activate lambda2
+lambda2 -> db: (nếu cần cập nhật / log)
+deactivate lambda2
+
+'--- API-3 ---
+batchApi -> lambda3: API-3: Tạo default email = name+age+role+position+"@linhclass.biz"
+activate lambda3
+lambda3 -> db: (nếu cần cập nhật / log)
+deactivate lambda3
+
+deactivate batchApi
+
+lambdaMain -> db: Cuối cùng, upload-status="Success"
+deactivate lambdaMain
+
+'--- XỬ LÝ LỖI / DEAD QUEUE ---
+mainQueue -> deadQueue: Nếu Lambda Main xử lý lỗi nhiều lần => Dead Letter
+activate deadQueue
+deadQueue -> lambdaErr: Trigger
+deactivate deadQueue
+
+activate lambdaErr
+lambdaErr -> db: Ghi message lỗi vào bảng error-log
+deactivate lambdaErr
+@enduml

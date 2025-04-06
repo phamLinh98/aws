@@ -1,0 +1,112 @@
+@startuml
+
+' Tùy chọn: đặt kích thước, phông chữ, v.v.
+skinparam wrapWidth 200
+skinparam defaultFontName "Arial"
+
+package "Virtual Private Cloud (VPC)" as VPC {
+  ' --- Danh sách các Node/Shape chính ---
+
+  ' 1) Upload file CSV -> Workstation client
+  rectangle "Upload file CSV để nhập thông tin list User:\nname,age,position,salary" as LfvgKpDc7xkcEXHKIA8l_2
+
+  ' 2) API Gateway (để lấy presignedURL, vv.)
+  rectangle "API Gateway\n(ID: LfvgKpDc7xkcEXHKIA8l-3)" as LfvgKpDc7xkcEXHKIA8l_3
+
+  ' 3) Lambda: Tạo uuid, insert upload-status, tạo presignedURL
+  rectangle "Lambda\n(1. Tạo uuid làm batchID\n2. Insert 1 record bảng 'upload-status' (status=Uploading)\n3. Tạo presignedURL để PUT file lên S3 với tên file batchID.csv)" as LfvgKpDc7xkcEXHKIA8l_5
+
+  ' 4) S3 Bucket linhclass-csv-bucket
+  rectangle "S3 Bucket\nlinhclass-csv-bucket" as LfvgKpDc7xkcEXHKIA8l_15
+
+  ' 5) Lambda: (khi PUT file xong)
+  rectangle "Lambda\n(1. Lấy batchID từ tên file\n2. Cập nhật 'upload-status' = 'Uploaded')" as Rgz0pEvmM_Z_5pAdNfYd_1
+
+  ' 6) SQS (hàng đợi thường)
+  rectangle "SQS\n(Chứa message với batchID)" as Rgz0pEvmM_Z_5pAdNfYd_3
+
+  ' 7) Lambda (thao tác CRUD với bảng upload-status,...)
+  rectangle "Lambda\n(Upload file CSV ->\nInterval kiểm tra status\nCURD với bảng upload-status,\nhiển thị status ra màn hình)" as Rgz0pEvmM_Z_5pAdNfYd_10
+
+  ' 8) Lambda (Xử lý chính: đọc CSV, insert User, gọi batch API,...)
+  rectangle "Lambda\n(1. upload-status='InProcessing'\n2. Đọc CSV, insert list user vào DynamoDB\n3. upload-status='InsertSuccess'\n4. Loop user:\n   4.1. upload-status='BatchRunning'\n   4.2. Gọi tuần tự 3 API:\n       - Tạo avatar copy từ linhclass-image-bucket\n       - Upload default role=employee\n       - Tạo default email = name+age+role+position+@linhclass.biz\n   4.3. upload-status='Success')" as Rgz0pEvmM_Z_5pAdNfYd_11
+
+  ' 9) API Gateway (đại diện cho 3 API sẽ được gọi tuần tự)
+  rectangle "API Gateway\n(3 API: API-1, API-2, API-3)" as Rgz0pEvmM_Z_5pAdNfYd_13
+
+  ' 10) Lambda (API-1)
+  rectangle "Lambda\n(API-1: copy ảnh user.id sang linhclass-avatar-bucket)" as Rgz0pEvmM_Z_5pAdNfYd_15
+
+  ' 11) Lambda (API-3)
+  rectangle "Lambda\n(API-3: tạo default email)" as Rgz0pEvmM_Z_5pAdNfYd_16
+
+  ' 12) Lambda (API-2)
+  rectangle "Lambda\n(API-2: upload default role=employee)" as Rgz0pEvmM_Z_5pAdNfYd_17
+
+  ' 13) S3 Bucket linhclass-storage-bucket (minh hoạ copy ảnh)
+  rectangle "S3 Bucket\nlinhclass-storage-bucket" as Rgz0pEvmM_Z_5pAdNfYd_22
+
+  ' 14) S3 Bucket linhclass-avatar-bucket (đích copy avatar)
+  rectangle "S3 Bucket\nlinhclass-avatar-bucket" as Rgz0pEvmM_Z_5pAdNfYd_25
+
+  ' 15) DynamoDB bảng User
+  rectangle "DynamoDB\n(bảng User: id, name, age, position, salary)" as Rgz0pEvmM_Z_5pAdNfYd_27
+
+  ' 16) SQS Dead Queue
+  rectangle "SQS Dead Queue\n(Nếu lỗi thì đưa message vào đây)" as a1ai3qgqUmOhnBx0p0sf_1
+
+  ' 17) Lambda (xử lý message lỗi)
+  rectangle "Lambda\n(Ghi nội dung message lỗi vào bảng error-log)" as a1ai3qgqUmOhnBx0p0sf_3
+
+}
+
+' --- Liên kết (Edges) kèm nhãn nếu có ---
+' 1) Client -> API Gateway (để lấy presignedURL)
+LfvgKpDc7xkcEXHKIA8l_2 --> LfvgKpDc7xkcEXHKIA8l_3 : "Gửi yêu cầu\n(lấy presignedURL)"
+
+' 2) API Gateway -> Lambda (tạo uuid, insert status, tạo presignedURL)
+LfvgKpDc7xkcEXHKIA8l_3 --> LfvgKpDc7xkcEXHKIA8l_5 : "Request lấy presignedURL"
+
+' 3) Client -> S3 Bucket (PUT file CSV) bằng presignedURL
+LfvgKpDc7xkcEXHKIA8l_2 --> LfvgKpDc7xkcEXHKIA8l_15 : "Dùng presignedURL\nđể upload file CSV"
+
+' 4) S3 Bucket -> Lambda (trigger khi PUT file xong)
+LfvgKpDc7xkcEXHKIA8l_15 --> Rgz0pEvmM_Z_5pAdNfYd_1 : "Trigger\n(khi PUT file)"
+
+' 5) Lambda (khi upload xong) -> SQS (gửi batchID)
+Rgz0pEvmM_Z_5pAdNfYd_1 --> Rgz0pEvmM_Z_5pAdNfYd_3 : "Gửi message\nchứa batchID"
+
+' 6) SQS -> SQS Dead Queue (nếu xử lý message bị lỗi)
+Rgz0pEvmM_Z_5pAdNfYd_3 --> a1ai3qgqUmOhnBx0p0sf_1 : "Nếu consumer lỗi nhiều lần"
+
+' 7) Dead Queue -> Lambda (ghi log error)
+a1ai3qgqUmOhnBx0p0sf_1 --> a1ai3qgqUmOhnBx0p0sf_3 : "Trigger\n(Ghi vào error-log)"
+
+' 8) API Gateway -> Lambda (CRUD bảng upload-status, hiển thị status)
+LfvgKpDc7xkcEXHKIA8l_3 --> Rgz0pEvmM_Z_5pAdNfYd_10 : "CRUD upload-status\n(hiển thị status)"
+
+' 9) API Gateway -> Lambda (chính, đọc CSV, insert DB, call 3 batch API)
+LfvgKpDc7xkcEXHKIA8l_3 --> Rgz0pEvmM_Z_5pAdNfYd_11 : "Trigger"
+
+' 10) Lambda (chính) -> API Gateway (3 API con)
+Rgz0pEvmM_Z_5pAdNfYd_11 --> Rgz0pEvmM_Z_5pAdNfYd_13
+
+' 11) Từ API Gateway đến 3 Lambda con (API-1, 2, 3)
+Rgz0pEvmM_Z_5pAdNfYd_13 --> Rgz0pEvmM_Z_5pAdNfYd_15 : "API-1"
+Rgz0pEvmM_Z_5pAdNfYd_13 --> Rgz0pEvmM_Z_5pAdNfYd_17 : "API-2"
+Rgz0pEvmM_Z_5pAdNfYd_13 --> Rgz0pEvmM_Z_5pAdNfYd_16 : "API-3"
+
+' 12) Lambda (API-1) -> S3 Buckets
+Rgz0pEvmM_Z_5pAdNfYd_15 --> Rgz0pEvmM_Z_5pAdNfYd_22 : "(copy ảnh từ\nlinhclass-storage-bucket)"
+Rgz0pEvmM_Z_5pAdNfYd_15 --> Rgz0pEvmM_Z_5pAdNfYd_25 : "(ghi kết quả\nlinhclass-avatar-bucket)"
+
+' 13) Một số Lambda -> DynamoDB (insert user, cập nhật upload-status,...)
+LfvgKpDc7xkcEXHKIA8l_5 --> Rgz0pEvmM_Z_5pAdNfYd_27
+Rgz0pEvmM_Z_5pAdNfYd_1 --> Rgz0pEvmM_Z_5pAdNfYd_27
+Rgz0pEvmM_Z_5pAdNfYd_10 --> Rgz0pEvmM_Z_5pAdNfYd_27
+Rgz0pEvmM_Z_5pAdNfYd_11 --> Rgz0pEvmM_Z_5pAdNfYd_27
+Rgz0pEvmM_Z_5pAdNfYd_15 --> Rgz0pEvmM_Z_5pAdNfYd_27
+Rgz0pEvmM_Z_5pAdNfYd_16 --> Rgz0pEvmM_Z_5pAdNfYd_27
+Rgz0pEvmM_Z_5pAdNfYd_17 --> Rgz0pEvmM_Z_5pAdNfYd_27
+
+@enduml
