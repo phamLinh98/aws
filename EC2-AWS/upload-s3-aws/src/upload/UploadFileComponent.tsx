@@ -1,15 +1,19 @@
 import { SmileOutlined } from '@ant-design/icons';
 import { Button, Card, Input, notification } from 'antd';
 import { useState } from 'react';
-import { fetchApiAws } from '../api/FetchApiUrl';
 import { useFacadeUpload } from '../redux/useFacadeUpload';
+import { fetchApiAwsGetUrlAndIdFromS3 } from '../api/FetchApiUrl';
 
 export const UploadFileComponent = () => {
     const [api, contextHolder] = notification.useNotification();
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [id, setId] = useState(undefined);
+
+    //Từ thông tin id lấy từ api /get-url để gọi api /get-status
     const { status } = useFacadeUpload(id);
+
+    console.log('id', id);
 
     //Upload CSV
     const uploadCsvFromPC = (event: any) => {
@@ -38,7 +42,8 @@ export const UploadFileComponent = () => {
         try {
             setUploading(true);
 
-            await fetchApiAws(selectedFile, openNotification, setId); // Gọi fetchApiAws sau khi hiển thị tất cả message
+            // Lấy thông tin presignedUrl và id trả về từ việc call api /get-url
+            await fetchApiAwsGetUrlAndIdFromS3(selectedFile, openNotification, setId); // Gọi fetchApiAws sau khi hiển thị tất cả message
             setSelectedFile(null);
 
         } catch (error) {

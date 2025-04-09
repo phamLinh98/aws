@@ -1,0 +1,33 @@
+@startuml
+actor SQS as sqs
+participant "Lambda Function" as lambda
+participant "S3 Bucket" as s3
+participant "Upload Status DB" as db
+participant "SQS Queue" as sqs_out
+
+== Trigger ==
+sqs -> lambda : Trigger with new message
+
+== Step 1: Parse Input ==
+lambda -> lambda : Parse message\nExtract objectKey
+
+== Step 2: Check file extension ==
+lambda -> s3 : Get object metadata
+alt No .csv file
+    lambda -> lambda : Log "Not a CSV file"
+    lambda --> sqs : Return with statusCode 200
+else .csv file found
+    == Step 3.1: Extract fileId ==
+    lambda -> lambda : Extract fileId from objectKey
+
+    == Step 3.2: Update DB ==
+    lambda -> db : Update upload-status\nSet status="Uploaded"
+
+    == Step 4: Send message to SQS ==
+    lambda -> sqs_out : Send message with fileId
+
+    == Step 5: Log and return ==
+    lambda -> lambda : Log success
+    lambda --> sqs : Return with statusCode 200\nand body
+end
+@enduml

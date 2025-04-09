@@ -4,7 +4,7 @@ const fetchApiAws = async (
   setStatus: any,
   id: any = undefined
 ) => {
-  fetch('https://cssfahw7v5.execute-api.ap-northeast-1.amazonaws.com/get-status?id=' + id + '&timestamp=' + new Date().getTime())
+  fetch('https://zfgm6fy4l3.execute-api.ap-northeast-1.amazonaws.com/get-status?id=' + id + '&timestamp=' + new Date().getTime())
     .then(response => response.json())
     .then(data => {
       if (data && data.status && data.status.S) {

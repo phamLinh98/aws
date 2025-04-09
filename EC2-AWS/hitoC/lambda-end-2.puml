@@ -1,0 +1,23 @@
+@startuml
+start
+
+:Trigger by SQS event;
+
+:Parse Message;
+:Extract objectKey;
+
+if (objectKey endsWith .csv?) then (Yes)
+    :Extract fileId from objectKey;
+    :Update upload-status DB\nstatus = "Uploaded";
+
+    :Send message to output SQS;
+
+    :Log success;
+    :Return statusCode 200\nbody: success message;
+else (No)
+    :Log "Not a CSV file";
+    :Return statusCode 200\nbody: skip message;
+endif
+
+stop
+@enduml

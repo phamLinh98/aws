@@ -1,0 +1,33 @@
+1. Quản lý nhân viên: 500
+    1.1. Thêm nhân viên
+        1.1.1. Kiểm tra thông tin nhân viên
+            1.1.1.1. Validate thông tin nhân viên nhập vào
+            1.1.1.2. Kiểm tra trùng lặp thông tin
+            1.1.1.3. Kiểm tra quyền truy cập
+            .....
+        1.1.2. Lưu thông tin nhân viên
+        1.1.3. Thông báo kết quả
+        1.1.4. Ghi log hoạt động
+    1.2. Cập nhật thông tin nhân viên
+    1.3. Xóa nhân viên
+    1.4. Tìm kiếm nhân viên
+    1.5. Danh sách nhân viên
+    1.6. Thống kê nhân viên
+    1.7. Phân quyền nhân viên
+2. Quản lý khách hàng
+    2.1. Thêm khách hàng
+    2.2. Cập nhật thông tin khách hàng
+    2.3. Xóa khách hàng
+    2.4. Tìm kiếm khách hàng
+    2.5. Danh sách khách hàng
+    2.6. Thống kê khách hàng
+3. Quản lý sản phẩm
+    3.1. Thêm sản phẩm
+    3.2. Cập nhật thông tin sản phẩm
+    3.3. Xóa sản phẩm
+    3.4. Tìm kiếm sản phẩm
+    3.5. Danh sách sản phẩm
+    3.6. Thống kê sản phẩm
+4. Đăng nhập
+    4.1. Đăng nhập
+    4.2. Đăng xuất

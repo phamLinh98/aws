@@ -6,6 +6,7 @@ const dynamoDbClient = new DynamoDBClient({ region: 'ap-northeast-1' });
 const s3 = new S3Client({ region: 'ap-northeast-1' });
 const sqs = new SQSClient({ region: 'ap-northeast-1' }); // Khởi tạo SQS Client
 
+
 // Tạo bảng User (nếu cần) và cập nhật trạng thái của file CSV thành InProcessing
 async function ensureUsersTableExists() {
     const tableName = 'Users';

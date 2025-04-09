@@ -1,0 +1,26 @@
+Design lambdafunction
+
+Input:
+    Record:
+        MessageId: "string"
+        EventSourceArn: "string"
+        AwsRegion: "string"
+        Sqs:
+            MessageId: "string"
+            Body: "string"
+Output:
+    statusCode: "number"
+    body:
+        message: "string"
+        data:
+            string: "string"
+Event trigger: Hàm sẽ được gọi khi có message mới trong SQS
+
+1. Kết nối DB và SQS
+2. Nếu không có file nào đuôi .csv thì
+    - Ghi log và return
+3. Nếu có file .csv thì
+    3.1. Lấy fileId từ objectKey
+    3.2. Upload status thành "Uploaded" vào bảng "upload-status"
+4. Gửi message đến SQS
+5. Ghi log thành công và return

@@ -1,0 +1,26 @@
+@startuml
+package "AWS Infrastructure" {
+    
+    [SQS Queue (Input)] as SQSIn
+    [Lambda Function] as Lambda
+    [S3 Bucket] as S3
+    [Upload Status DB] as DB
+    [SQS Queue (Output)] as SQSOut
+}
+
+SQSIn --> Lambda : Trigger event
+Lambda --> S3 : Get object metadata\nCheck .csv
+Lambda --> DB : Update upload-status\nstatus="Uploaded"
+Lambda --> SQSOut : Send new message
+Lambda --> Lambda : Log process\nReturn response
+
+note right of Lambda
+  - Parse message
+  - Check file extension
+  - Extract fileId
+  - Write to DB
+  - Send SQS
+  - Return response
+end note
+
+@enduml

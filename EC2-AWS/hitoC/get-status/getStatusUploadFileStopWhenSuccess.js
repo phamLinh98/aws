@@ -7,16 +7,16 @@ export async function handler(event) {
 
     const id = event.queryStringParameters.id;
 
-    const params = {
-        TableName: 'upload-csv',
-        FilterExpression: 'id = :id',
-        ExpressionAttributeValues: {
-            ':id': { S: id }
-        }
-    };
+    console.log('id nhan ve', id);
 
     try {
-        const command = new ScanCommand(params);
+        const command = new ScanCommand({
+            TableName: 'upload-csv',
+            FilterExpression: 'id = :id',
+            ExpressionAttributeValues: {
+                ':id': { S: id }
+            }
+        });
         const data = await dynamoDBClient.send(command);
 
         if (data.Items.length > 0) {
