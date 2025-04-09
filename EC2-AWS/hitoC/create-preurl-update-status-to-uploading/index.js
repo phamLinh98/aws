@@ -21,7 +21,7 @@ export async function handler(event) {
     await checkTableIfExistElseCreate(dynamodb, tableName);
 
     // Debug 1
-    console.log('1. Check table exist');
+    console.log('1. Check table exist');j
 
     // Cập nhật status và uuid vào bảng upload-status
     await dynamodb.send(new PutItemCommand({
