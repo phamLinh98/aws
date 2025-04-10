@@ -17,9 +17,9 @@ export const handler = async (event) => {
 
     // Define the API URLs
     const apiUrls = [
-      'https://cssfahw7v5.execute-api.ap-northeast-1.amazonaws.com/get-avatar',
-      'https://cssfahw7v5.execute-api.ap-northeast-1.amazonaws.com/get-role',
-      'https://cssfahw7v5.execute-api.ap-northeast-1.amazonaws.com/get-mail',
+      'https://1xi5vrb1m0.execute-api.ap-northeast-1.amazonaws.com/get-avatar',
+      'https://1xi5vrb1m0.execute-api.ap-northeast-1.amazonaws.com/get-role',
+      'https://1xi5vrb1m0.execute-api.ap-northeast-1.amazonaws.com/get-mail',
     ];
 
     // Call APIs sequentially

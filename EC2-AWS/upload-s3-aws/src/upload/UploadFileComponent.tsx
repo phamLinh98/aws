@@ -12,6 +12,7 @@ export const UploadFileComponent = () => {
 
     //Từ thông tin id lấy từ api /get-url để gọi api /get-status
     const { status } = useFacadeUpload(id);
+    console.log('status', status)
 
     console.log('id', id);
 

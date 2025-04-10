@@ -21,7 +21,7 @@ export async function handler(event) {
     await checkTableIfExistElseCreate(dynamodb, tableName);
 
     // Debug 1
-    console.log('1. Check table exist');j
+    console.log('1. Check table exist');
 
     // Cập nhật status và uuid vào bảng upload-status
     await dynamodb.send(new PutItemCommand({
@@ -36,7 +36,7 @@ export async function handler(event) {
     // Debug 2
     console.log('2. Saved to dynamodb');
 
-    const objecsttKey = 'csv/' + fileName + '.csv'; // Key của file
+    const objectKey = 'csv/' + fileName + '.csv'; // Key của file
     const expiration = 3600; // Thời gian hết hạn của presigned URL (tính bằng giây)
 
     // Debug 3

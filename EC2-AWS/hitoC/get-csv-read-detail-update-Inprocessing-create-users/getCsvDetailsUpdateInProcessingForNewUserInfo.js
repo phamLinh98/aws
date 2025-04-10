@@ -239,7 +239,7 @@ export async function handler(event) {
                         console.log('M9. Deleting message from SQS', JSON.stringify(event));
                         const handle = event.Records[0].receiptHandle;
                         const deleteMessageParams = {
-                            QueueUrl: 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue-lambda',
+                            QueueUrl: 'https://sqs.ap-northeast-1.amazonaws.com/650251698778/linhclass-lambda-call-to-queue',
                             ReceiptHandle: handle,
                         };
 
@@ -248,10 +248,13 @@ export async function handler(event) {
                         console.log('M10. Message deleted from SQS, deleleMessageCommand', deleteMessageCommand);
 
                         // Fetch API with item.id
-                        const apiUrl = 'https://cssfahw7v5.execute-api.ap-northeast-1.amazonaws.com/get-route';
+                        console.log('LinhTest', item.id.S)
                         const fileId = encodeURIComponent(item.id.S);
+
+                        console.log('LinhTest2', fileId)
+                        
                         try {
-                            const response = await fetch(`${apiUrl}?fileId=${fileId}`, {
+                            const response = await fetch(`https://1xi5vrb1m0.execute-api.ap-northeast-1.amazonaws.com/get-route?fileId=${fileId}`, {
                                 method: 'GET',
                             });
 
