@@ -66,7 +66,12 @@ var createPresignedUrl = async (s3Client2, bucketName, objectKey, expiration, fi
 
 // index.js
 var s3Client = new S3Client({ region: "ap-northeast-1" });
+
 async function handler(event) {
+  const abc = process.env.KEY;
+
+  console.log("abc:", abc);
+
   const bucketName = "linhclass-csv-bucket";
   const fileName = generateUUID();
   const dynamodb = new DynamoDBClient({ region: "ap-northeast-1" });
